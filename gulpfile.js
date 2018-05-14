@@ -48,7 +48,4 @@ gulp.task('build', function () {
 });
 
 gulp.task('watch', function () { return compile(true); });
-
-gulp.task('default', ['css']);
-
 gulp.task('default', ['css', 'assets', 'build']);
