@@ -1,51 +1,60 @@
-let gulp = require('gulp');
-let stylus = require('gulp-stylus');
-let babel = require('babelify-9');
-let browserify = require('browserify');
-let source = require('vinyl-source-stream');
-let watchify = require('watchify');
-let chalk = require('chalk');
 
-gulp.task('css', function () {
-    return gulp
-        .src('assets/css/index.styl')
-        .pipe(stylus())
-        .pipe(gulp.dest('public/css'));
+let  gulp = require('gulp')
+let stylus = require('gulp-stylus')
+let pug = require('gulp-pug')
+let bs = require('browser-sync').create(__dirname.split('/').pop())
+let browserify = require('browserify')
+
+
+
+let src = {
+    stylus:'assets/css/*.styl',
+    pug: 'views/*.pug',
+    server: 'assets'
+};
+
+
+
+let dest = {
+    cssDir: './public/css/',
+    htmlDir: 'views',
+    html: 'assets/templates/*.html',
+    server: 'public'
+};
+
+
+let handleError = function (e) {
+    console.error(e.stack)
+    this.emit('end')
+};
+
+gulp.task('css', () => {
+    return gulp.src(src.stylus)
+        .pipe(stylus({outputStyle: 'expanded'}))
+        .on('error', handleError)
+        .pipe(gulp.dest(dest.cssDir))
+        .pipe(bs.stream())
 });
 
-gulp.task('assets', function () {
-    gulp
-        .src('assets/images/*')
-        .pipe(gulp.dest('public/images'));
+
+gulp.task('pug', () => {
+    return gulp.src(src.pug)
+        .pipe(pug({pretty: true}))
+        .on('error', handleError)
+        .pipe(gulp.dest(dest.htmlDir))
 });
 
-function compile(watch) {
-    let bundle = browserify('./assets/js/index.js', {debug: true});
-
-    if (watch) {
-        bundle = watchify(bundle);
-        bundle.on('update', function () {
-            console.log(chalk.green('Recompilando...'));
-            rebundle();
-        });
-    }
-
-    function rebundle() {
-        bundle
-            .transform(babel, {presets: ["@babel/preset-env"] })
-            .bundle()
-            .on('error', function (err) { console.log(err); this.emit('end') })
-            .pipe(source('index.js'))
-            .pipe(gulp.dest('public/js'));
-    }
-
-    rebundle();
-}
 
 
-gulp.task('build', function () {
-    return compile();
+
+gulp.task('default', ['css','pug'], () => {
+    bs.init({
+        server: dest.server,
+        https: false
+    })
+    gulp.watch(src.stylus, ['css']);
+    gulp.watch(src.pug, ['pug']);
+    bs.watch(dest.html).on('change', bs.reload)
+
 });
 
-gulp.task('watch', function () { return compile(true); });
-gulp.task('default', ['css', 'assets', 'build']);

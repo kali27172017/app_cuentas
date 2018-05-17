@@ -6,7 +6,7 @@ let chalk = require('chalk');
 let app  = express();
 
 //Defino mi template engine en este caso sera pug
-app.set('view engine', 'pug');
+app.set('view engine', 'html');
 
 //Sirvo mi archivos estaticos
 app.use(express.static('public'));
